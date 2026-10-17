@@ -160,3 +160,16 @@ Format: Decision · Reason · Alternatives · Trade-offs · Interview explanatio
 
 **Decision (Phase 6):** Offer the labeling task as an Excel workbook (`data/gold_labeling.xlsx`) as well as the web page; an importer validates each row (allowed root causes, severity 1-5, Yes/No, no half-filled rows, ids untouched) and writes the same `evals/gold_labels.csv`.
 **Reason:** The user preferred a spreadsheet. Dropdowns reject typos, a Rubric sheet carries the same definitions the AI got, and the importer is repeatable (re-import replaces by complaint id). The workbook holds the masked complaint texts, so it lives in the gitignored `data/` folder.
+
+## Phase 6 — Evaluation (results)
+**Decision:** Write prompt v2 once, after error analysis of v1 against the human labels; change prompt text only (same model, schema and rubric lines).
+**Reason (numbers):** v1 root cause 80%, severity exact 66%, within +-1 95%, 3 of 14 critical complaints missed, AI lower than human on 25 complaints. v2: 84%, 71%, 97%, 0 missed, 17. Net root-cause gain is small (11 fixed, 7 broken), so the clearest wins are the critical-complaint recall and the reduced low-severity bias.
+**Alternatives:** a bigger model (not free), fine-tuning (out of scope), several prompt iterations (the guide says one). **Trade-offs:** v2 sends more tokens (2,041 vs 1,319 per complaint, $0.00088 vs $0.00067) and doubled vulnerable false alarms (4 to 8); some categories got worse (fees_interest recall 0.73 to 0.64).
+**Interview:** "Root cause accuracy went from 80% to 84% and no critical complaint was missed any more; it still over-flags vulnerable consumers, so people stay in the loop, and I would confirm the gain on 30 fresh labeled complaints."
+
+**Decision:** Chose the evaluation honestly: my first guess (v1 over-flags "vulnerable") was disproved by the labels (precision 83%, recall 87%); the real problems were low severity ratings and credit-report/customer-service confusion.
+**Interview:** "Reading a few outputs gave me a wrong hypothesis. Measuring against labels gave the right one."
+
+**Decision:** Guard against leakage: v2 examples are synthetic and two drafts that mirrored gold complaints were replaced; results are also reported on complaints 1-50 and 51-100 separately, and the report says v2's gain is optimistic until a fresh holdout is labeled.
+
+**Decision:** The remaining ~1,400 sampled complaints will be triaged with v2 at the start of Phase 7 (needs a database lock for about 90 minutes of free-tier calls), not now.

@@ -1,0 +1,64 @@
+{
+  "n": 100,
+  "root_cause_accuracy": 84.0,
+  "root_cause_per_category": {
+    "billing_error": {
+      "precision": 0.57,
+      "recall": 0.8,
+      "human_count": 5
+    },
+    "unauthorized_transaction": {
+      "precision": 0.86,
+      "recall": 0.86,
+      "human_count": 7
+    },
+    "fees_interest": {
+      "precision": 1.0,
+      "recall": 0.64,
+      "human_count": 11
+    },
+    "credit_reporting_error": {
+      "precision": 1.0,
+      "recall": 0.91,
+      "human_count": 22
+    },
+    "fraud_scam": {
+      "precision": 0.69,
+      "recall": 0.9,
+      "human_count": 10
+    },
+    "account_access": {
+      "precision": 0.81,
+      "recall": 0.81,
+      "human_count": 16
+    },
+    "payment_processing": {
+      "precision": 0.92,
+      "recall": 0.85,
+      "human_count": 13
+    },
+    "debt_collection": {
+      "precision": 0.88,
+      "recall": 0.88,
+      "human_count": 8
+    },
+    "other": {
+      "precision": 0.7,
+      "recall": 0.88,
+      "human_count": 8
+    }
+  },
+  "severity_exact": 71.0,
+  "severity_within_1": 97.0,
+  "severity_mean_abs_error": 0.33,
+  "critical_human_5": 14,
+  "critical_missed_ai_le3": 0,
+  "high_human_ge4": 31,
+  "high_recall_ai_ge4": 96.8,
+  "vulnerable_human_yes": 23,
+  "vulnerable_ai_yes": 31,
+  "vulnerable_precision": 74.2,
+  "vulnerable_recall": 100.0,
+  "vulnerable_false_pos": 8,
+  "vulnerable_false_neg": 0
+}

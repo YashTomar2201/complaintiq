@@ -4,6 +4,7 @@
   python -m evals.run_eval v1 v2              # side-by-side comparison table
   python -m evals.run_eval v1 --errors 15     # also list the 15 worst mistakes
   python -m evals.run_eval v1 --subset 30     # only the first 30 gold complaints (fast check used in CI)
+  python -m evals.run_eval v1 v2 --positions 51-100   # only gold complaints 51-100
 
 Metrics: root cause accuracy + per-category precision/recall + confusion matrix; severity exact / within +-1 /
 missed critical (human 5); vulnerable-consumer precision/recall.
@@ -22,7 +23,7 @@ from src.ingest.cfpb import DB_PATH, ROOT
 RESULTS_DIR = ROOT / "evals" / "results"
 
 
-def load_joined(version, subset=None, con=None):
+def load_joined(version, subset=None, con=None, positions=None):
     """Human labels joined with the AI answer for `version` (only AI answers with status ok)."""
     labels = pd.DataFrame(load_labels().values())
     if labels.empty:
@@ -32,6 +33,8 @@ def load_joined(version, subset=None, con=None):
     order = pd.read_csv(GOLD_SET, dtype=str)
     if subset:
         order = order.head(subset)
+    if positions:  # (low, high), inclusive, e.g. (51, 100)
+        order = order[order.position.astype(int).between(*positions)]
     labels = labels[labels.complaint_id.isin(order.complaint_id)]
     own = con is None
     con = con or duckdb.connect(str(DB_PATH), read_only=True)
@@ -88,8 +91,8 @@ def worst_errors(df, k=15):
     return d[d.score > 0].sort_values("score", ascending=False).head(k)
 
 
-def report(version, subset=None, errors=0):
-    df, missing = load_joined(version, subset)
+def report(version, subset=None, errors=0, positions=None):
+    df, missing = load_joined(version, subset, positions=positions)
     done = df.dropna(subset=["ai_root_cause"])
     if done.empty:
         raise SystemExit(f"No AI answers for {version} on your labeled complaints. Run: python -m src.ai.triage run {version} --gold")
@@ -115,8 +118,8 @@ def report(version, subset=None, errors=0):
                   f"AI {r.ai_root_cause}/sev {r.ai_severity}/vuln {bool(r.ai_vulnerable)} | {str(r.summary)[:110]}")
 
 
-def compare(v1, v2, subset=None):
-    a, b = (compute(load_joined(v, subset)[0].dropna(subset=["ai_root_cause"])) for v in (v1, v2))
+def compare(v1, v2, subset=None, positions=None):
+    a, b = (compute(load_joined(v, subset, positions=positions)[0].dropna(subset=["ai_root_cause"])) for v in (v1, v2))
     rows = [("Complaints scored", "n"), ("Root cause accuracy %", "root_cause_accuracy"), ("Severity exact %", "severity_exact"),
             ("Severity within +-1 %", "severity_within_1"), ("Severity mean abs error", "severity_mean_abs_error"),
             ("Critical (human 5) missed", "critical_missed_ai_le3"), ("Vulnerable precision %", "vulnerable_precision"),
@@ -135,10 +138,11 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     subset = int(args[args.index("--subset") + 1]) if "--subset" in args else None
     errors = int(args[args.index("--errors") + 1]) if "--errors" in args else 0
+    positions = tuple(int(x) for x in args[args.index("--positions") + 1].split("-")) if "--positions" in args else None
     versions = [x for x in args if x.startswith("v") and x[1:].isdigit()]
     if len(versions) == 2:
-        compare(versions[0], versions[1], subset)
+        compare(versions[0], versions[1], subset, positions)
     elif len(versions) == 1:
-        report(versions[0], subset, errors)
+        report(versions[0], subset, errors, positions)
     else:
         raise SystemExit(__doc__)
