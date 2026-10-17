@@ -121,3 +121,27 @@ Your answer: not necessarily; more people may have bought the cards. (Correct)
 Model answer: Could be more customers, a launch or seasonality. Compare to a baseline, look at the rate per customer if available, and check which issue drove it (here: purchase problems on the statement, +152) before raising an alarm.
 
 **Revisit:** partial periods in time series; what makes a good KPI; why early wins matter.
+
+## Phase 5 — AI Enrichment (score: 4/5)
+
+**Q1. Why force the LLM to return a fixed JSON schema?**
+Your answer: so it can be processed and read by machine easily. (Correct)
+Model answer: Free text can't be filtered, counted or charted; a validated schema gives clean columns (severity always 1-5, root cause from a fixed list) usable in dashboards, queues and evaluation.
+
+**Q2. Why remove PII before sending text to the LLM?**
+Your answer: to prevent leaking sensitive info. (Correct)
+Model answer: Personal data should leave the bank's systems as little as possible. CFPB masking is not complete and real internal text is unmasked, so we build the habit; we tested phone/email/account numbers are removed while dollar amounts are kept.
+
+**Q3. What is a severity rubric and why in the prompt?**
+Your answer: I don't know.
+Model answer: Written definitions of each severity level (5 = money lost + vulnerable/legal threat ... 1 = general dissatisfaction). Without it the model and humans would use "4" inconsistently; it makes results consistent, explainable, and is the standard Phase 6 measures against.
+
+**Q4. Why store model name and prompt version with every result? (project-specific)**
+Your answer: to see which models perform best with what prompt; helps improve prompts. (Correct)
+Model answer: Traceability: know exactly what produced each answer; compare v1 vs v2 on the same complaints; table is keyed on (complaint, prompt version) so v1 stays when v2 runs.
+
+**Q5. Why triage only 200 of 1,501 and stop? (project-specific)**
+Your answer: to check accuracy first; improve the prompt, then test on a larger set. (Correct)
+Model answer: Reading outputs showed a likely flaw (35% flagged vulnerable); running it on all 1,501 would waste free-tier calls, and v1 must stay unchanged as the baseline for a fair v1-vs-v2 comparison.
+
+**Revisit:** what a rubric is and why consistency matters.

@@ -146,3 +146,14 @@ Format: Decision · Reason · Alternatives · Trade-offs · Interview explanatio
 **Reason:** My first version processed the lowest IDs (oldest complaints) first, so any partial run was a biased sample. Found while planning the limited free-tier runs.
 
 **Cross-check against the Phase 3 amount rule:** of 72 narratives with a `{$..}` amount, the AI left the amount empty in 5; of 67 amounts the AI returned, 66 appeared in the narrative's amount list.
+
+## Phase 6 — Evaluation (build)
+**Decision:** The gold set is 100 complaints with fixed product quotas (credit card 30, checking/savings 25, credit reporting 20, debt collection 12, vehicle loan 8, money transfer 5), drawn from the saved triage sample (narratives only, first copy of duplicated texts, 60-4,000 characters), shuffled so the labeler does not work product by product.
+**Reason:** A random sample would be about 40% credit card and would barely test small products; quotas give a readable accuracy per product. First-copy-only stops the 578-copy template from dominating (Phase 1 finding). The length limit means the human reads the same text the AI sees (no truncation).
+
+**Decision:** The labeling page shows the human the same masked text and the same rubric (a test checks the rubric text equals the one in prompt v1) and hides the AI's answer; labels are saved after every click.
+**Reason:** A fair comparison needs the same information and independent labels. Saving each click means a 2-3 hour task can be split over several sittings.
+
+**Decision:** Prompt v1 was run on all 100 gold complaints before any labeling; v1 stays frozen as the baseline.
+
+**Bugs found while testing the page:** (1) Streamlit read `{$92.00} ... {$35.00}` as maths and coloured the narrative red; the text is now shown as escaped plain text. (2) The file watcher printed hundreds of harmless torchvision warnings; turned off in `.streamlit/config.toml`.

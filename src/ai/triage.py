@@ -8,7 +8,7 @@ Safe to re-run: complaints already done for this prompt version are skipped (ide
 
 Usage:
   python -m src.ai.triage sample [N]            # choose N complaints (default 1500) once, reproducibly
-  python -m src.ai.triage run [v1] [--limit K]  # triage up to K not-yet-done complaints with prompt triage_<version>.txt
+  python -m src.ai.triage run [v1] [--limit K] [--gold]  # triage not-yet-done complaints (--gold: only the evaluation set)
   python -m src.ai.triage summary [v1]          # counts, validity and cost
 """
 import json
@@ -73,10 +73,14 @@ def build_prompt(template, product, issue, narrative):
 
 
 # ---------- one complaint ----------
+def prepare_text(narrative):
+    """Exactly what the AI is shown (and what the human labeler sees): one paragraph, cut to MAX_CHARS, PII masked."""
+    return mask_pii(" ".join(str(narrative).split())[:MAX_CHARS])
+
+
 def triage_one(client, template, row, retries=1):
     """Returns (Triage or None, error text or None, input_tokens, output_tokens, pii counter)."""
-    text = " ".join(str(row.narrative).split())[:MAX_CHARS]
-    masked, pii = mask_pii(text)
+    masked, pii = prepare_text(row.narrative)
     prompt = build_prompt(template, row.product, row.issue, masked)
     tin = tout = 0
     error = None
@@ -90,7 +94,7 @@ def triage_one(client, template, row, retries=1):
     return None, error, tin, tout, pii
 
 
-def run(version="v1", limit=None, client=None):
+def run(version="v1", limit=None, client=None, only_ids=None):
     con = connect()
     init_tables(con)
     template = load_prompt(version)
@@ -104,6 +108,8 @@ def run(version="v1", limit=None, client=None):
                           AND t.prompt_version = $v AND t.status = 'ok')
         ORDER BY hash(c.complaint_id)   -- fixed pseudo-random order: a partial run is still an unbiased sample
         """, {"v": version}).df()
+    if only_ids is not None:
+        todo = todo[todo.complaint_id.isin(only_ids)]
     if limit:
         todo = todo.head(limit)
     ok = failed = 0
@@ -166,7 +172,11 @@ if __name__ == "__main__":
         con = connect()
         log.info("sample size: %d", make_sample(con, int(nums[0]) if nums else 1500))
     elif cmd == "run":
-        run(version, int(a[a.index("--limit") + 1]) if "--limit" in a else None)
+        gold = None
+        if "--gold" in a:  # only the hand-labelled evaluation complaints (evals/gold_set.csv)
+            import pandas as pd
+            gold = set(pd.read_csv(ROOT / "evals" / "gold_set.csv", dtype=str).complaint_id)
+        run(version, int(a[a.index("--limit") + 1]) if "--limit" in a else None, only_ids=gold)
     elif cmd == "summary":
         summary(version)
     else:

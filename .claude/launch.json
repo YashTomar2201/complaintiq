@@ -4,8 +4,32 @@
     {
       "name": "complaintiq",
       "runtimeExecutable": ".venv/Scripts/python.exe",
-      "runtimeArgs": ["-m", "streamlit", "run", "src/app/Home.py", "--server.port", "8501", "--server.headless", "true"],
+      "runtimeArgs": [
+        "-m",
+        "streamlit",
+        "run",
+        "src/app/Home.py",
+        "--server.port",
+        "8501",
+        "--server.headless",
+        "true"
+      ],
       "port": 8501
+    },
+    {
+      "name": "labeling",
+      "runtimeExecutable": ".venv/Scripts/python.exe",
+      "runtimeArgs": [
+        "-m",
+        "streamlit",
+        "run",
+        "evals/label_app.py",
+        "--server.port",
+        "8502",
+        "--server.headless",
+        "true"
+      ],
+      "port": 8502
     }
   ]
 }

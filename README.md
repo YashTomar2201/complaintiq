@@ -53,3 +53,14 @@ python -m src.ai.triage summary v1       # valid %, tokens, estimated paid cost
 Each complaint: PII masking (Presidio) -> prompt `prompts/triage_v1.txt` -> Gemini JSON -> Pydantic validation -> `complaint_triage` table.
 
 First results (200 complaints, prompt v1, `gemini-3.5-flash-lite`, free tier): 100% valid output, ~1,300 input / 110 output tokens per complaint, about $0.0007 per complaint at paid-tier list prices. Accuracy against human labels is measured in Phase 6 (`docs/evals.md`).
+
+## Evaluation (Phase 6)
+The AI is scored against 100 complaints labeled by a human (the project owner), never by an AI.
+```
+python -m evals.gold                       # choose the 100 gold complaints (done once; ids in evals/gold_set.csv)
+streamlit run evals/label_app.py --server.port 8502   # human labels them (saved to evals/gold_labels.csv)
+python -m src.ai.triage run v1 --gold      # AI answers for the gold complaints
+python -m evals.run_eval v1 --errors 15    # accuracy, confusion matrix, worst mistakes
+python -m evals.run_eval v1 v2             # compare two prompt versions
+```
+Results and the v1 to v2 table are written up in `docs/evals.md`.
