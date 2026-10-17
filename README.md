@@ -41,3 +41,13 @@ Filters (date, product, state) update the KPIs, insights and every chart. All nu
 1. **Jan 2025 spike:** 7,601 complaints, 3.1x the typical month (2,451); 4,474 were "Managing an account" on checking/savings, mostly one copied direct-deposit complaint.
 2. **Credit cards are rising:** +16% (3,668 to 4,239) in Jul-Sep 2026 vs the 3 months before, driven by "Problem with a purchase shown on your statement" (+152).
 3. **Monetary relief is rare and uneven:** 4.6% of closed complaints overall, but 11.9% for credit cards.
+
+## AI triage (Phase 5)
+Needs a free Gemini key: put `GEMINI_API_KEY=...` in `.env` (never commit it).
+```
+python -m src.ai.llm models              # models your key can use (optionally set GEMINI_MODEL in .env)
+python -m src.ai.triage sample 1500      # choose the complaints once (reproducible)
+python -m src.ai.triage run v1 --limit 50  # triage up to 50 not-yet-done complaints (re-run to continue)
+python -m src.ai.triage summary v1       # valid %, tokens, estimated paid cost
+```
+Each complaint: PII masking (Presidio) -> prompt `prompts/triage_v1.txt` -> Gemini JSON -> Pydantic validation -> `complaint_triage` table.

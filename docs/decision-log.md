@@ -108,3 +108,25 @@ Format: Decision · Reason · Alternatives · Trade-offs · Interview explanatio
 **Decision:** Colour follows the entity: each product has one fixed colour from a colourblind-checked palette; single-series charts use one blue; the map uses a one-hue light-to-dark ramp.
 
 **Finding (honest limit):** the map counts raw complaints, so big states look worst. Per-customer rates would need customer counts per state, which we do not have.
+
+## Phase 5 — AI enrichment (build, before the first real run)
+**Decision:** Use Google's free Gemini API tier instead of a paid provider (this supersedes the Phase 0 note about the Anthropic SDK).
+**Reason:** The user does not want to spend money. A local model was ruled out by hardware (7.3 GB RAM, no GPU: only ~3B models fit, roughly 30-60 s per complaint and weaker accuracy). All LLM calls go through one wrapper (`src/ai/llm.py`), so the provider can change in one file.
+**Alternatives:** Groq free tier (open Llama models), local Ollama, paid Claude Haiku. **Trade-offs:** free tiers have rate limits (calls are throttled and retried, runs resume where they stopped) and limits can change; masked public complaint text is sent to Google, acceptable for public data but not for real customer data.
+**Interview:** "I isolated the model behind one function, so moving from a free tier to a private deployment at a bank is a one-file change."
+
+**Decision:** Sample 1,501 complaints once (seed 42) and save the ids in `triage_sample`: narratives only, first copy of duplicated texts only, spread proportionally over products (credit card 594, checking/savings 372, credit reporting 311, debt collection 129, ...).
+**Reason:** Reproducible, no template bias, and a fixed pool from which Phase 6 draws the 100 gold complaints. Small because of free-tier limits; the run resumes across days.
+
+**Decision:** Presidio PII masking with the small spaCy model; locations and the company name are not masked; `{$...}` amounts are kept; custom rule for 8-17 digit account numbers.
+**Reason:** Names, phones, e-mails, SSNs and account numbers must not leave the system; state/city and dollar amounts are useful for triage. Tested: phone, e-mail and account number are removed, amounts kept.
+**Caveat:** a rule-based phone pattern also tags SSN-shaped text, which is fine because it is masked either way.
+
+**Decision:** Pydantic schema with hard limits (severity 1-5, confidence 0-1, fixed category lists); one retry on invalid output, then the row is stored as `failed` and retried on the next run. Results are keyed by (complaint, prompt version) with model name, tokens and timestamp.
+**Reason:** Traceability (which model and prompt gave which answer) and a fair v1-vs-v2 comparison in Phase 6.
+
+**Decision:** The prompt shows the model the product and the consumer's chosen issue category as well as the narrative, and contains a severity rubric (highest level that applies), category definitions and 3 examples.
+**Reason:** Analysts see those fields too. Phase 6's labeling page will show a human the same context so the comparison is fair.
+
+**Decision:** `cost_usd` is an estimate of what the same run would cost on a paid plan (needs list prices in `.env`); the real bill is 0.
+**Reason:** The guide asks for cost per complaint; token counts are always stored.

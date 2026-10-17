@@ -97,3 +97,27 @@ Your answer: so there is no cheating causing 100% precision and recall. (Correct
 Model answer: If the matcher could see the answers, the measurement would be meaningless. The same principle applies to the human-labelled gold set in Phase 6.
 
 **Revisit:** ZIP/identifier types; why we simulate messy data; precision vs recall (use the 200/180/300 example); SQL views (guide Q5 not asked: a view is a saved query so dashboard, reports and tests share one definition).
+
+## Phase 4 — Analytics Dashboard (score: 3.25/5)
+
+**Q1. Why build the dashboard before the AI features?**
+Your answer: to have a showable project. (Partial)
+Model answer: Delivers value quickly with low risk, shows the customer we understand their data, builds trust while the slower, riskier AI features are built. FDEs plan early wins.
+
+**Q2. Why compute the insights with SQL, not an LLM?**
+Your answer: AI might make mistakes or hallucinate; SQL gives accurate data. (Correct)
+Model answer: Numbers must be exact and repeatable; use AI where it adds value (reading text), plain code where it is more reliable.
+
+**Q3. What is a KPI? Two examples.**
+Your answer: key performance indicator giving valuable insights; total complaints and with a narrative. (Mostly)
+Model answer: An important number leadership tracks to see how things are going. Better examples here: on-time response rate, closed with monetary relief. "With a narrative" is a data-completeness stat.
+
+**Q4. Why did the monthly charts drop sharply at the right edge, and what did we do? (project-specific)**
+Your answer: there was a spike in January. (Incorrect)
+Model answer: The latest month (October 2026) is partial (data ends 14 Oct), so it has about half the complaints and looks like a collapse. We left the partial month out of the monthly trend charts; totals and KPIs still include everything. The January 2025 spike is a separate, real event.
+
+**Q5. Is a 16% rise in credit card complaints always bad news? (project-specific)**
+Your answer: not necessarily; more people may have bought the cards. (Correct)
+Model answer: Could be more customers, a launch or seasonality. Compare to a baseline, look at the rate per customer if available, and check which issue drove it (here: purchase problems on the statement, +152) before raising an alarm.
+
+**Revisit:** partial periods in time series; what makes a good KPI; why early wins matter.
