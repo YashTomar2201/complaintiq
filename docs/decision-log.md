@@ -157,3 +157,6 @@ Format: Decision · Reason · Alternatives · Trade-offs · Interview explanatio
 **Decision:** Prompt v1 was run on all 100 gold complaints before any labeling; v1 stays frozen as the baseline.
 
 **Bugs found while testing the page:** (1) Streamlit read `{$92.00} ... {$35.00}` as maths and coloured the narrative red; the text is now shown as escaped plain text. (2) The file watcher printed hundreds of harmless torchvision warnings; turned off in `.streamlit/config.toml`.
+
+**Decision (Phase 6):** Offer the labeling task as an Excel workbook (`data/gold_labeling.xlsx`) as well as the web page; an importer validates each row (allowed root causes, severity 1-5, Yes/No, no half-filled rows, ids untouched) and writes the same `evals/gold_labels.csv`.
+**Reason:** The user preferred a spreadsheet. Dropdowns reject typos, a Rubric sheet carries the same definitions the AI got, and the importer is repeatable (re-import replaces by complaint id). The workbook holds the masked complaint texts, so it lives in the gitignored `data/` folder.

@@ -64,3 +64,5 @@ python -m evals.run_eval v1 --errors 15    # accuracy, confusion matrix, worst m
 python -m evals.run_eval v1 v2             # compare two prompt versions
 ```
 Results and the v1 to v2 table are written up in `docs/evals.md`.
+
+Prefer Excel to the web page? `python -m evals.excel_labels make` writes `data/gold_labeling.xlsx` (dropdowns + rubric sheet); after filling it, `python -m evals.excel_labels import` checks every row and saves your labels to `evals/gold_labels.csv`.
