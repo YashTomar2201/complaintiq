@@ -1,0 +1,15 @@
+duckdb
+pandas
+requests
+pydantic
+python-dotenv
+streamlit
+plotly
+scikit-learn
+sentence-transformers
+chromadb
+presidio-analyzer
+presidio-anonymizer
+faker
+pytest
+anthropic
