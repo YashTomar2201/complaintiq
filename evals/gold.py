@@ -16,7 +16,6 @@ from pathlib import Path
 import duckdb
 import pandas as pd
 
-from src.ai.triage import prepare_text
 from src.ingest.cfpb import DB_PATH, ROOT
 
 GOLD_SET = ROOT / "evals" / "gold_set.csv"
@@ -31,6 +30,7 @@ LABEL_COLUMNS = ["complaint_id", "root_cause", "severity", "vulnerable_consumer"
 
 
 def make_gold(force=False):
+    from src.ai.triage import prepare_text  # heavy import (Presidio); only needed here, not by the labeling page
     if GOLD_SET.exists() and not force:
         raise SystemExit(f"{GOLD_SET} already exists. Changing the gold set would orphan your labels (use --force to redo).")
     con = duckdb.connect(str(DB_PATH), read_only=True)

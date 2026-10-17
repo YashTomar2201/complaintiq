@@ -33,7 +33,7 @@ Why three sources: the CFPB stopped publishing narratives in Aug 2026, so text c
 
 ## Dashboard (Phase 4)
 ```
-streamlit run src/app/Home.py     # then open the Dashboard page
+python -m streamlit run src/app/Home.py     # then open the Dashboard page
 ```
 ![Dashboard](docs/img/dashboard.png)
 
@@ -58,7 +58,7 @@ First results (200 complaints, prompt v1, `gemini-3.5-flash-lite`, free tier): 1
 The AI is scored against 100 complaints labeled by a human (the project owner), never by an AI.
 ```
 python -m evals.gold                       # choose the 100 gold complaints (done once; ids in evals/gold_set.csv)
-streamlit run evals/label_app.py --server.port 8502   # human labels them (saved to evals/gold_labels.csv)
+python -m streamlit run evals/label_app.py --server.port 8502   # human labels them (saved to evals/gold_labels.csv)
 python -m src.ai.triage run v1 --gold      # AI answers for the gold complaints
 python -m evals.run_eval v1 --errors 15    # accuracy, confusion matrix, worst mistakes
 python -m evals.run_eval v1 v2             # compare two prompt versions
