@@ -30,3 +30,14 @@ api:     fetched 53, 0 new, 0 updated             | table rows 70,576
 check:   70,576 rows | 26,157 with narrative (37.1%) | months 2024-08..2026-10, none missing or low
 ```
 Why three sources: the CFPB stopped publishing narratives in Aug 2026, so text comes from the archive while structure/status comes from the bulk file and API. Details in `docs/data-profile.md`.
+
+## Dashboard (Phase 4)
+```
+streamlit run src/app/Home.py     # then open the Dashboard page
+```
+![Dashboard](docs/img/dashboard.png)
+
+Filters (date, product, state) update the KPIs, insights and every chart. All numbers come from one SQL view, `v_dashboard_facts` (`src/transform/models.sql`), so they cannot disagree. Three findings it shows about Capital One:
+1. **Jan 2025 spike:** 7,601 complaints, 3.1x the typical month (2,451); 4,474 were "Managing an account" on checking/savings, mostly one copied direct-deposit complaint.
+2. **Credit cards are rising:** +16% (3,668 to 4,239) in Jul-Sep 2026 vs the 3 months before, driven by "Problem with a purchase shown on your statement" (+152).
+3. **Monetary relief is rare and uneven:** 4.6% of closed complaints overall, but 11.9% for credit cards.

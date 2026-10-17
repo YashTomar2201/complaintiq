@@ -75,3 +75,17 @@ SELECT year_month, product,
        round(100.0 * count(*) FILTER (WHERE timely) / count(*), 2) AS timely_pct
 FROM complaints
 GROUP BY year_month, product;
+
+-- One shared definition behind EVERY dashboard number (Phase 4). Grain: day x product x state x issue x response.
+-- KPIs, charts and insights all sum these columns, so they can never disagree with each other.
+CREATE OR REPLACE VIEW v_dashboard_facts AS
+SELECT date_received, year_month, product,
+       coalesce(state, 'Unknown')                                  AS state,
+       issue, company_response,
+       count(*)                                                    AS complaints,
+       count(*) FILTER (WHERE has_narrative)                       AS with_narrative,
+       count(*) FILTER (WHERE timely)                              AS timely_complaints,
+       count(*) FILTER (WHERE is_final_response)                   AS final_responses,   -- denominator for relief rates
+       count(*) FILTER (WHERE got_monetary_relief)                 AS monetary_relief
+FROM complaints
+GROUP BY ALL;

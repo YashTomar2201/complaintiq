@@ -89,3 +89,22 @@ Format: Decision · Reason · Alternatives · Trade-offs · Interview explanatio
 
 **Decision:** Test the cleaning SQL with a small hand-made raw table (6 tests) instead of the real data.
 **Reason:** Tests then run anywhere (including CI without the 70k-row database) and show exactly what each rule should do.
+
+## Phase 4 — Dashboard
+**Decision:** One SQL view, `v_dashboard_facts` (grain: day x product x state x issue x response), feeds every KPI, chart and insight; a test checks it agrees with the Phase 3 `v_monthly_trends` view.
+**Reason:** If each chart computed its own numbers they could disagree and the customer would stop trusting the dashboard. Filters become one WHERE clause.
+**Alternatives:** query the `complaints` table directly from each chart (simpler, but duplicated logic). **Trade-offs:** the view is nearly as large as the table (~70k rows) since the grain is fine; fast enough for this size.
+**Interview:** "One shared definition means one version of the truth; a test proves the dashboard and the trend view agree."
+
+**Decision:** The 3 insights are SQL comparisons (last 3 complete months vs the 3 before; busiest month vs median; monetary relief rate), not AI. They respect the filters and say so when there is not enough history.
+**Reason:** Numbers must be exact and repeatable; an LLM could misread them. Writing the tests found a real bug (an issue present in only one period gave NaN and crashed).
+
+**Decision:** Monthly trend charts leave out the partial latest month (Oct 2026, 14 days).
+**Reason:** The first draft showed a sharp fake drop at the right edge, which would read as "complaints collapsed". Totals and KPIs still include all data.
+
+**Decision:** On-time % stays as a KPI (shown to 3 decimals, 99.996%) with a note, and its chart axis starts at 98%.
+**Reason:** At 2 decimals it rounded to "100.00%" although 3 complaints were late; the metric barely moves (see Phase 1).
+
+**Decision:** Colour follows the entity: each product has one fixed colour from a colourblind-checked palette; single-series charts use one blue; the map uses a one-hue light-to-dark ramp.
+
+**Finding (honest limit):** the map counts raw complaints, so big states look worst. Per-customer rates would need customer counts per state, which we do not have.
