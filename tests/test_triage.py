@@ -76,10 +76,24 @@ def test_run_is_idempotent_and_saves_traceability(con):
     assert len(rows) == 5 and set(rows) == {("ok", "fake-model", "v1", 3)}
 
 
+class PickyClient(FakeClient):
+    """Complaint 1: invalid once, then valid (the retry rescues it). Complaint 2: always invalid. Others: valid."""
+
+    def __init__(self):
+        super().__init__([])
+        self.seen = {}
+
+    def complete(self, system, user, schema):
+        self.calls += 1
+        n = "1" if "number 1 " in user else "2" if "number 2 " in user else "x"
+        self.seen[n] = self.seen.get(n, 0) + 1
+        if n == "2" or (n == "1" and self.seen[n] == 1):
+            return LLMResult("not json", 100, 20)
+        return LLMResult(json.dumps(GOOD), 100, 20)
+
+
 def test_invalid_output_is_retried_once_then_marked_failed(con):
-    # complaint 1: bad, then good (retry rescues it). complaint 2: bad, bad (fails). others: good
-    client = FakeClient(["not json", json.dumps(GOOD), "still not json", "{}"])
-    triage.run("v1", client=client)
+    triage.run("v1", client=PickyClient())
     status = dict(con.execute("SELECT complaint_id, status FROM complaint_triage").fetchall())
     assert status["1"] == "ok" and status["2"] == "failed"
     assert con.execute("SELECT error FROM complaint_triage WHERE complaint_id = '2'").fetchone()[0]

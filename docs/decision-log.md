@@ -130,3 +130,19 @@ Format: Decision · Reason · Alternatives · Trade-offs · Interview explanatio
 
 **Decision:** `cost_usd` is an estimate of what the same run would cost on a paid plan (needs list prices in `.env`); the real bill is 0.
 **Reason:** The guide asks for cost per complaint; token counts are always stored.
+
+## Phase 5 — AI enrichment (results)
+**Decision:** Use `gemini-3.5-flash-lite` for bulk triage. Probed your free key: `gemini-2.5-flash` and `-flash-lite` are closed to new users (404); `3.1-flash-lite`, `3.5-flash-lite`, `3.5-flash` and `3.8-flash` work.
+**Reason:** Flash-Lite is fast (~1-2 s per call, no hidden "thinking" tokens) and cheap on paid plans; the 3.8 Flash model took 66 s for one trivial call.
+
+**Result (200 complaints, prompt v1):** 100% valid structured output on the first or second try (target >= 98%). 1,319 input and 109 output tokens per complaint. No rate-limit errors at 15 requests/minute (about 4 s per complaint). Real bill on the free tier: $0. At the paid-tier list price ($0.30 / $2.50 per 1M tokens in/out, read from Google's pricing page) the same run costs about $0.00067 per complaint, well under the $0.01 target.
+**Daily limit:** not reached after 200 requests; the true daily cap is still unknown (the runner stops cleanly and resumes if it is hit).
+
+**Decision:** Process only 200 of the 1,501 sampled complaints with v1 for now; run the full sample after the prompt is improved (v2) in Phase 6.
+**Reason:** Reading 20 outputs against the text showed v1 over-flags `vulnerable_consumer` (35% of the 200; anyone alleging fraud is flagged because my rubric lists "victim of fraud") and leans on `fraud_scam`. Running a known-flawed prompt on 1,501 complaints would waste free-tier calls, and v1 must stay unchanged as the baseline for a fair v1-vs-v2 comparison. These are hypotheses to confirm against your hand labels in Phase 6, not conclusions.
+**Interview:** "I read a sample of outputs before scaling, found a likely rubric flaw, and held the bulk run until I could measure and fix it."
+
+**Decision:** The run order is a fixed pseudo-random shuffle (`hash(complaint_id)`), not ID order.
+**Reason:** My first version processed the lowest IDs (oldest complaints) first, so any partial run was a biased sample. Found while planning the limited free-tier runs.
+
+**Cross-check against the Phase 3 amount rule:** of 72 narratives with a `{$..}` amount, the AI left the amount empty in 5; of 67 amounts the AI returned, 66 appeared in the narrative's amount list.

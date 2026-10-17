@@ -51,3 +51,5 @@ python -m src.ai.triage run v1 --limit 50  # triage up to 50 not-yet-done compla
 python -m src.ai.triage summary v1       # valid %, tokens, estimated paid cost
 ```
 Each complaint: PII masking (Presidio) -> prompt `prompts/triage_v1.txt` -> Gemini JSON -> Pydantic validation -> `complaint_triage` table.
+
+First results (200 complaints, prompt v1, `gemini-3.5-flash-lite`, free tier): 100% valid output, ~1,300 input / 110 output tokens per complaint, about $0.0007 per complaint at paid-tier list prices. Accuracy against human labels is measured in Phase 6 (`docs/evals.md`).

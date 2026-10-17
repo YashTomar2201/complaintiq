@@ -17,12 +17,14 @@ import os
 import sys
 from pathlib import Path
 
+from dotenv import load_dotenv
 from pydantic import ValidationError
 
 from src.ai.pii import mask_pii
 from src.ai.schema import Triage
 from src.ingest.cfpb import ROOT, connect
 
+load_dotenv(ROOT / ".env")
 log = logging.getLogger("triage")
 PROMPT_DIR = ROOT / "prompts"
 MAX_CHARS = 4000     # long narratives are cut: median is ~730 chars, a few reach 30,000; keeps cost bounded
@@ -100,7 +102,8 @@ def run(version="v1", limit=None, client=None):
         FROM triage_sample s JOIN complaints c USING (complaint_id)
         WHERE NOT EXISTS (SELECT 1 FROM complaint_triage t WHERE t.complaint_id = s.complaint_id
                           AND t.prompt_version = $v AND t.status = 'ok')
-        ORDER BY c.complaint_id""", {"v": version}).df()
+        ORDER BY hash(c.complaint_id)   -- fixed pseudo-random order: a partial run is still an unbiased sample
+        """, {"v": version}).df()
     if limit:
         todo = todo.head(limit)
     ok = failed = 0
@@ -143,14 +146,18 @@ def summary(version="v1"):
     if not r.n:
         log.info("nothing processed yet for %s (sample size %d)", version, sample)
         return
-    log.info("%s | model %s | processed %d of %d sampled | valid %.1f%% | tokens in/out per complaint %d/%d | est. paid cost $%s",
+    cost = estimate_cost(r.tin, r.tout)  # from stored token counts, so older rows are covered too
+    log.info("%s | model %s | processed %d of %d sampled | valid %.1f%% | tokens in/out per complaint %d/%d | %s",
              version, r.model, r.n, sample, 100 * r.ok / r.n, r.tin / r.n, r.tout / r.n,
-             f"{r.cost / r.n:.5f}/complaint (${r.cost:.2f} total)" if r.cost == r.cost and r.cost else "n/a (set prices in .env)")
+             f"est. paid-tier cost ${cost / r.n:.5f} per complaint (${cost:.3f} total; free tier bill is $0)"
+             if cost is not None else "cost n/a (set GEMINI_PRICE_* in .env)")
     con.close()
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="[%(name)s] %(message)s")
+    for noisy in ("httpx", "google_genai", "httpcore", "presidio-analyzer"):
+        logging.getLogger(noisy).setLevel(logging.WARNING)  # one log line per API call is too much
     a = sys.argv[1:]
     cmd = a[0] if a else ""
     nums = [x for x in a[1:] if x.isdigit()]
