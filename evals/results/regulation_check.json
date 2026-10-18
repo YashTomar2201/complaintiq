@@ -1,0 +1,15 @@
+{
+  "judged": 20,
+  "of": 20,
+  "counts": {
+    "Sensible": 9,
+    "Partly sensible": 5,
+    "Not sensible": 4,
+    "None suggested - a rule was missed": 1,
+    "None suggested - correct": 1
+  },
+  "sensible_pct_of_suggestions": 50.0,
+  "sensible_or_partly_pct": 77.8,
+  "no_suggestion": 2,
+  "missed": 1
+}

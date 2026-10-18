@@ -49,6 +49,26 @@ Real cost on the free tier: $0.
 - **Targets from the discovery doc:** root cause 84% (target >= 80%, met); severity within +-1 97% (met), but severity **exact** match is 71%, below 80%; cost $0.00088 per complaint (target < $0.01, met).
 - **Not good enough to act without a person:** about 1 in 6 root causes is wrong and severity is exact only 7 in 10 times.
 
-## 7. Next steps (not done yet)
+## 7. Regulation suggestions: human hand-check (Phase 7)
+The suggester (retrieve 5 sections, ask the LLM which may apply, reject any citation that was not retrieved) was run on 20 gold complaints, spread over root causes, and judged by the project owner (`data/regulation_check.xlsx`, results in `evals/results/regulation_check.json`).
+
+| Verdict | Count |
+|---|---|
+| Sensible | 9 |
+| Partly sensible | 5 |
+| Not sensible | 4 |
+| None suggested, correct | 1 |
+| None suggested, but a rule applies (missed) | 1 |
+
+- **Of the 18 complaints that got a suggestion: 50% sensible, 78% sensible or partly sensible, 22% not sensible.**
+- **No invented citations reached the human:** the guardrail (tested with a fake LLM) rejects any section that was not retrieved. The failures below are all real sections used in the wrong place, which the guardrail cannot catch.
+- **Why the 4 "not sensible" ones failed:**
+  1. A definitions-only section was suggested (1022.3, 1005.2), which says nothing about the complaint's problem.
+  2. The section's scope did not fit: Regulation Z section 1026.11 for a checking account, Regulation E for a small-business account, and section 1006.26 (time-barred debt) where no debt collector was mentioned.
+- **The 5 "partly sensible" ones:** the right regulation but loosely related add-on sections, a closed-end truck loan matched to an open-end credit rule (1026.13), and a credit-report dispute matched to 1022.74 instead of 1022.43.
+- **The missed one:** a bank closing deposit accounts and holding funds for three months falls under rules we did not index (Regulation DD, Regulation CC, and the unfair-practices law), so there was nothing to retrieve. Coverage is limited to Regulations E, F, V and part of Z.
+- **Conclusion:** good enough as a *starting point for a compliance reviewer* (about 3 in 4 suggestions are at least partly useful, always labeled "not legal advice"), not as an answer. Fixes (not done): tell the model to skip definition sections and to check each regulation's scope (consumer deposit accounts for Reg E, open-end credit for 1026.13, debt collectors for Reg F); add Regulation DD and CC; a stricter "if unsure return none" rule.
+
+## 8. Next steps (not done yet)
 - A v3 prompt aimed at the vulnerable false alarms and the fee/APY complaints, tested on a fresh 30-complaint human-labeled holdout.
-- Regulation-suggestion check on 20 complaints (Phase 7) and CI eval on a 30-complaint subset (Phase 9).
+- A v2 regulation prompt with the scope rules above, re-judged on a fresh set of 20; CI eval on a 30-complaint subset (Phase 9).
