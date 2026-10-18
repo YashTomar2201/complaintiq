@@ -145,3 +145,27 @@ Your answer: to check accuracy first; improve the prompt, then test on a larger 
 Model answer: Reading outputs showed a likely flaw (35% flagged vulnerable); running it on all 1,501 would waste free-tier calls, and v1 must stay unchanged as the baseline for a fair v1-vs-v2 comparison.
 
 **Revisit:** what a rubric is and why consistency matters.
+
+## Phase 6 — Evaluation (score: 3/5)
+
+**Q1. Why must a human create the gold labels, not the AI?**
+Your answer: so the AI can test its labels against actual truth. (Mostly)
+Model answer: The gold set is the answer key. If the AI wrote it, we would check the AI against itself and it would look perfect even when wrong. Human labels are an independent truth. (Same reason Gemini Pro should not fill the sheet.)
+
+**Q2. What is a confusion matrix and what did v1's tell us?**
+Your answer: I don't know.
+Model answer: A table of true category (rows) vs AI prediction (columns); the diagonal is correct, off-diagonal cells are mix-ups. v1 confused debt collection and fraud with credit reporting (3 + 2 cases) and used customer service where the human picked the underlying problem. That drove the v2 tie-breaker rules.
+
+**Q3. Why do missed severity-5 complaints matter most?**
+Your answer: they carry the most importance; accuracy on them shows the pipeline handles sensitive cases. (Correct)
+Model answer: Errors have unequal costs. Missing a critical complaint (money lost, vulnerable consumer) risks real harm and regulatory trouble; high-severity recall matters most. v1 missed 3 of 14, v2 missed 0.
+
+**Q4. Why might v2's improvement be smaller than it looks? (project-specific)**
+Your answer: some categories performed worse than before. (Correct)
+Model answer: Also: small sample (11 fixed vs 7 broken = net +4) and v2 was written after studying errors in the same 100 complaints (optimistic). Regressions: fees_interest recall 0.73 to 0.64, vulnerable false alarms 4 to 8.
+
+**Q5. What does it teach us that my guess about "vulnerable" was wrong? (project-specific)**
+Your answer: AI is not always 100 percent correct. (Missed the point)
+Model answer: The wrong one was the human reviewer's guess. Reading a handful of outputs gives impressions (small, non-random, confirmation bias). Hypotheses must be checked against independent labels on a proper sample: the real v1 problems were low severity and category confusion, not "vulnerable".
+
+**Revisit:** confusion matrix; evaluating with numbers not impressions; why holdout data matters.
