@@ -68,3 +68,13 @@ Results and the v1 to v2 table are written up in `docs/evals.md`.
 Prefer Excel to the web page? `python -m evals.excel_labels make` writes `data/gold_labeling.xlsx` (dropdowns + rubric sheet); after filling it, `python -m evals.excel_labels import` checks every row and saves your labels to `evals/gold_labels.csv`.
 
 **Results (100 hand-labeled complaints, prompt v1 to v2):** root cause accuracy 80% to 84%, severity within +-1 95% to 97%, critical complaints rated 3 or lower 3 of 14 to 0 of 14, cost about $0.0009 per complaint at paid-tier prices. Full analysis, regressions and caveats in `docs/evals.md`.
+
+## Regulation lookup and risk alerts (Phase 7)
+```
+python -m src.ingest.regulations download        # official text from eCFR (Reg E, F, V, Z), data/regulations/
+python -m src.ai.regulations_rag index           # embed the sections into ChromaDB
+python -m src.ai.clusters build                  # embed all narratives, 30 clusters, LLM-named
+python -m src.ai.clusters alerts                 # growth rule -> risk_alerts table (with suggested regulations)
+python -m evals.regulation_check make            # 20-complaint workbook for a human to judge the suggestions
+```
+Every suggestion is checked in code against the retrieved sections (no invented citations) and labeled "Suggestion for compliance review - not legal advice."

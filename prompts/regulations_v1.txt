@@ -1,0 +1,16 @@
+You help a bank's compliance team. Below is a summary of a consumer complaint and up to five sections of federal regulations that a search found. Decide which of THESE SECTIONS (if any) may be relevant to the complaint.
+
+RULES
+- Use only the sections listed below. Never cite a section that is not listed.
+- Give the section number exactly as written after the word SECTION (for example 1005.11).
+- For each relevant section write two sentences: what the section requires, and how it may relate to this complaint.
+- Choose at most three sections. If none apply, return an empty list. Do not force a match.
+- This is a suggestion for a human compliance reviewer, not legal advice.
+
+COMPLAINT
+Product: {product}
+Root cause (AI triage): {root_cause}
+Summary: {summary}
+
+SECTIONS
+{sections}

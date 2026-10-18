@@ -60,8 +60,17 @@ class GeminiClient:
                 time.sleep(min(2 ** i * 5, 60))  # 10s, 20s, 40s, 60s: rate limits usually clear within a minute
 
 
-def get_client():
-    return GeminiClient()
+def get_client(model=None):
+    return GeminiClient(model)
+
+
+AUX_MODEL = os.getenv("GEMINI_AUX_MODEL") or "gemini-3.1-flash-lite"
+
+
+def get_aux_client():
+    """A second model for the smaller side tasks (naming clusters, regulation suggestions). Free tiers count requests
+    per model per day (500 for the triage model), so side tasks must not use up the triage quota."""
+    return GeminiClient(AUX_MODEL)
 
 
 def list_models():

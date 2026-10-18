@@ -173,3 +173,21 @@ Format: Decision · Reason · Alternatives · Trade-offs · Interview explanatio
 **Decision:** Guard against leakage: v2 examples are synthetic and two drafts that mirrored gold complaints were replaced; results are also reported on complaints 1-50 and 51-100 separately, and the report says v2's gain is optimistic until a fresh holdout is labeled.
 
 **Decision:** The remaining ~1,400 sampled complaints will be triaged with v2 at the start of Phase 7 (needs a database lock for about 90 minutes of free-tier calls), not now.
+
+## Phase 7 — Regulation lookup (RAG) and systemic risk alerts
+**Decision:** Official regulation text from the eCFR API (as of 2026-10-05): Reg E (1005, 27 sections), Reg F (1006, 15), Reg V (1022, 36) and, from the large Reg Z, only general rules, open-end credit and credit card rules (1026.1-16 and 1026.51-60; 26 sections). Sections are split into ~1,800-character chunks (479 chunks), embedded with the local all-MiniLM-L6-v2 model and stored in ChromaDB.
+**Reason:** Reg Z is mostly about mortgages, which these complaints rarely involve; billing errors (1026.13) and card fees (1026.52) are in the part we kept. Local embeddings are free and send nothing out.
+**Limits:** Regulation V covers only part of the credit-reporting law (the statute itself is not included), so credit-report retrieval is weaker. Retrieval checks on 5 sample complaints found the right section in the top 5 for debt collection, card fees and billing errors; unauthorized debit transfers found 1005.6 but not 1005.11.
+
+**Decision:** Guardrail in code: any section the LLM cites that was not among the 5 retrieved is rejected; the title, citation and quoted text shown to users come from our stored text, never from the LLM; output carries "Suggestion for compliance review - not legal advice."; "none apply" is an allowed answer.
+**Reason:** Fake legal citations are dangerous. Tested with a fake LLM that invents section 1005.99, cites a bare "Regulation E", and repeats a section: only the one real retrieved section survives.
+
+**Decision:** Risk alerts use two detectors with the same rule (this month >= 2x the average of the previous 3 months AND >= 10 complaints, complete months only): (A) 30 KMeans clusters of all 26,157 narratives, named by the LLM; (B) product + issue + sub-issue counts, which still work for recent months without narratives.
+**Reason:** The guide embeds the AI summaries, but only ~1,500 complaints have one, too few for a 10-complaint monthly rule. Narrative embeddings cover every complaint with text. Detector B is not affected by narrative availability falling over time.
+**Results:** 97 alerts (24 narrative, 73 structured). The biggest is the January 2025 event: "Delayed direct deposit due to technical issues" 1,162 complaints vs an average of 3.3 before, and the structured group "Checking: Deposits and withdrawals" 3,278 vs 60. Later real signals: "Unresolved Merchant Transaction and Dispute Denials" in April 2026 (123 vs 42), debt collection "took or threatened legal action" in June 2026 (200 vs 87). Only 1 alert in the latest complete month (Sept 2026).
+**Caveat:** Many January 2025 alerts across unrelated clusters reflect that month's overall volume jump and a rise in narrative coverage (47% to 69%), not 30 separate problems.
+**Interview:** "Alerts are triggered by a simple, explainable rule with a minimum count so tiny groups cannot raise false alarms."
+
+**Decision:** The LLM work for naming clusters and suggesting regulations uses a second free model (`gemini-3.1-flash-lite`); triage stays on `gemini-3.5-flash-lite`.
+**Reason:** The free tier allows 500 requests per model per day (discovered when a 1,400-complaint run stopped at 429 RESOURCE_EXHAUSTED after ~500 requests today). Side tasks must not use up the triage quota, and triage must stay on the model that was evaluated. The remaining ~900 v2 triage calls resume after the daily reset (the runner is idempotent).
+**Trade-offs:** Different models in different features, recorded here; alert regulation suggestions were generated for the 20 largest alerts only (18 got at least one suggestion). For structured alerts the suggestions are weaker because the "summary" is just the product and issue label.
